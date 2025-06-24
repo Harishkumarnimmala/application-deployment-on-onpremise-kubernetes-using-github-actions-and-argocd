@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: <your-git-repo-url>
+    repoURL: https://github.com/Harishkumarnimmala/application-deployment-on-onpremise-kubernetes-using-github-actions-and-argocd.git
     targetRevision: HEAD
     path: helm/frontend
     helm:

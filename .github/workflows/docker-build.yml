@@ -1,0 +1,41 @@
+name: Build and Push React App
+
+on:
+  push:
+    paths:
+      - 'application-stack/**'
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        working-directory: application-stack
+        run: npm ci
+
+      - name: Build React app
+        working-directory: application-stack
+        run: npm run build
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t ghcr.io/${{ github.repository_owner }}/frontend-app:latest application-stack
+          docker push ghcr.io/${{ github.repository_owner }}/frontend-app:latest
