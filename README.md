@@ -1,70 +1,105 @@
-# Getting Started with Create React App
+# Application Deployment on On-Premise Kubernetes using GitHub Actions and Argo CD
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This project demonstrates a full DevOps workflow to deploy a React frontend application on an on-premise Kubernetes cluster using:
 
-## Available Scripts
+- **GitHub Actions** for continuous integration and continuous delivery (CI/CD) to build and push Docker images.
+- **Helm** for templating Kubernetes manifests and managing releases.
+- **Argo CD** for GitOps-style continuous deployment and syncing Kubernetes resources.
+- **GitHub Container Registry (GHCR)** for hosting Docker container images.
 
-In the project directory, you can run:
+---
 
-### `npm start`
+## Project Structure
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Application deployment on on-premise Kubernetes using GitHub Actions and Argo CD/
+├── application-stack/          # React frontend source code and Dockerfile
+│   ├── src/
+│   ├── public/
+│   ├── package.json
+│   └── Dockerfile
+├── helm/
+│   └── frontend/              # Helm chart for frontend app
+│       ├── templates/
+│       ├── values.yaml
+│       └── Chart.yaml
+├── argo-apps/                # Argo CD Application manifests
+│   ├── argo-app-dev.yaml
+│   └── argo-app-prod.yaml
+├── .github/
+│   └── workflows/
+│       └── docker-build.yml  # GitHub Actions workflow file
+└── README.md
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
 
-### `npm test`
+---
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Prerequisites
 
-### `npm run build`
+- A Kubernetes cluster with `kubectl` configured to access it  
+- Argo CD installed and running in the Kubernetes cluster  
+- A GitHub repository with GitHub Actions enabled  
+- Docker image hosting in GitHub Container Registry (GHCR)  
+- Basic familiarity with Helm charts and Kubernetes manifests  
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+---
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Useful Commands
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+# Apply Argo CD Application manifest
+kubectl apply -f argo-apps/argo-app-dev.yaml
 
-### `npm run eject`
+# Force sync Argo CD app (requires argocd CLI configured)
+argocd app sync frontend-dev --force
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+# Delete frontend pods to force Kubernetes to pull new image
+kubectl delete pod -n frontend-dev -l app=frontend
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+# Watch pod status in the frontend-dev namespace
+kubectl get pods -n frontend-dev -w
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+# View logs of frontend pods
+kubectl logs -n frontend-dev -l app=frontend
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+# Forward frontend service port for local access
+kubectl port-forward svc/frontend -n frontend-dev 9090:80
 
-## Learn More
+---
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Debugging Tips
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+- **InvalidImageName error:**  
+  Ensure your Docker image names are all lowercase, and there are no trailing spaces or special characters (like `%`) in your Helm `values.yaml` or Argo CD manifests.
 
-### Code Splitting
+- **ImagePullBackOff error:**  
+  Verify your Kubernetes cluster nodes have network access to GitHub Container Registry (GHCR).  
+  If the registry is private, make sure `imagePullSecrets` are configured properly.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+- **Pods stuck on old images:**  
+  Use `imagePullPolicy: Always` in your Helm chart to force Kubernetes to pull the latest image.  
+  Delete existing pods with `kubectl delete pod -n frontend-dev -l app=frontend` to trigger fresh pulls.
 
-### Analyzing the Bundle Size
+- **GitHub Actions build failures:**  
+  Check the **Actions** tab in your GitHub repository for build logs and error details.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+- **Argo CD sync issues:**  
+  Use `argocd app sync frontend-dev --force` or delete and reapply your Argo CD Application manifest to fix stuck syncs.
 
-### Making a Progressive Web App
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## Debugging Tips
+1. InvalidImageName error:
+Ensure your Docker image names are all lowercase, and there are no trailing spaces or special characters (like %) in your Helm values.yaml or Argo CD manifests.
 
-### Advanced Configuration
+2. ImagePullBackOff error:
+Verify your Kubernetes cluster nodes have network access to GitHub Container Registry (GHCR).
+If the registry is private, make sure imagePullSecrets are configured properly.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+3. Pods stuck on old images:
+Use imagePullPolicy: Always in your Helm chart to force Kubernetes to pull the latest image.
+Delete existing pods with kubectl delete pod -n frontend-dev -l app=frontend to trigger fresh pulls.
 
-### Deployment
+4. GitHub Actions build failures:
+Check the Actions tab in your GitHub repository for build logs and error details.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+5. Argo CD sync issues:
+Use argocd app sync frontend-dev --force or delete and reapply your Argo CD Application manifest to fix stuck syncs.

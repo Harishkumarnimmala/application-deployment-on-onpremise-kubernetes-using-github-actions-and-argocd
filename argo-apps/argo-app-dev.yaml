@@ -12,6 +12,11 @@ spec:
     helm:
       valueFiles:
         - values.yaml
+      parameters:
+        - name: image.repository
+          value: ghcr.io/harishkumarnimmala/frontend-app
+        - name: image.tag
+          value: latest
   destination:
     server: https://kubernetes.default.svc
     namespace: frontend-dev
