@@ -12,22 +12,22 @@ This project demonstrates a full DevOps workflow to deploy a React frontend appl
 ## Project Structure
 
 Application deployment on on-premise Kubernetes using GitHub Actions and Argo CD/
-├── application-stack/          # React frontend source code and Dockerfile
+├── application-stack/          
 │   ├── src/
 │   ├── public/
 │   ├── package.json
 │   └── Dockerfile
 ├── helm/
-│   └── frontend/              # Helm chart for frontend app
+│   └── frontend/              
 │       ├── templates/
 │       ├── values.yaml
 │       └── Chart.yaml
-├── argo-apps/                # Argo CD Application manifests
+├── argo-apps/                
 │   ├── argo-app-dev.yaml
 │   └── argo-app-prod.yaml
 ├── .github/
 │   └── workflows/
-│       └── docker-build.yml  # GitHub Actions workflow file
+│       └── docker-build.yml  
 └── README.md
 
 
@@ -62,27 +62,6 @@ kubectl logs -n frontend-dev -l app=frontend
 
 # Forward frontend service port for local access
 kubectl port-forward svc/frontend -n frontend-dev 9090:80
-
----
-
-## Debugging Tips
-
-- **InvalidImageName error:**  
-  Ensure your Docker image names are all lowercase, and there are no trailing spaces or special characters (like `%`) in your Helm `values.yaml` or Argo CD manifests.
-
-- **ImagePullBackOff error:**  
-  Verify your Kubernetes cluster nodes have network access to GitHub Container Registry (GHCR).  
-  If the registry is private, make sure `imagePullSecrets` are configured properly.
-
-- **Pods stuck on old images:**  
-  Use `imagePullPolicy: Always` in your Helm chart to force Kubernetes to pull the latest image.  
-  Delete existing pods with `kubectl delete pod -n frontend-dev -l app=frontend` to trigger fresh pulls.
-
-- **GitHub Actions build failures:**  
-  Check the **Actions** tab in your GitHub repository for build logs and error details.
-
-- **Argo CD sync issues:**  
-  Use `argocd app sync frontend-dev --force` or delete and reapply your Argo CD Application manifest to fix stuck syncs.
 
 ---
 
