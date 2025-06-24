@@ -37,5 +37,6 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          docker build -t ghcr.io/${{ github.repository_owner }}/frontend-app:latest application-stack
-          docker push ghcr.io/${{ github.repository_owner }}/frontend-app:latest
+          docker build -t ghcr.io/harishkumarnimmala/frontend-app:latest application-stack
+          docker push ghcr.io/harishkumarnimmala/frontend-app:latest
+
